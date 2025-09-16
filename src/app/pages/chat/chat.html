@@ -1,0 +1,16 @@
+<app-layout>
+  <div class="chat-container">
+    <div class="chat-messages">
+      @for (message of messages(); track $index) {
+        <div class="message" [ngClass]="message.type">
+          <p>{{ message.text }}</p>
+        </div>
+      }
+    </div>
+    <div class="chat-input">
+      <input type="text" placeholder="Escribe tu mensaje..." [formControl]="messageControl" (keyup.enter)="sendMessage()" />
+      <button (click)="sendMessage()">Enviar</button>
+    </div>
+  </div>
+</app-layout>
+

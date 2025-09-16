@@ -1,0 +1,58 @@
+.counter-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: sans-serif;
+  margin: 2rem;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f9f9f9;
+  max-width: 300px;
+  margin: 2rem auto;
+}
+
+h1 {
+  color: #333;
+}
+
+.count-display {
+  font-size: 4rem;
+  font-weight: bold;
+  margin: 1rem 0;
+  color: #007bff;
+}
+
+.count-display:nth-child(3) {
+  color: #28a745;
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+button {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.reset-button {
+  background-color: #6c757d;
+}
+
+.reset-button:hover {
+  background-color: #5a6268;
+}

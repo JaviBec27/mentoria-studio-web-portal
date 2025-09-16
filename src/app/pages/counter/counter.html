@@ -1,0 +1,10 @@
+<div class="counter-container">
+  <h1>Contador</h1>
+  <p class="count-display">{{ count }}</p>
+  <p class="count-display">{{ counterSignal() }}</p>
+  <div class="button-group">
+    <button (click)="increment()">Incrementar</button>
+    <button (click)="decrement()">Decrementar</button>
+    <button (click)="count = 0; counterSignal.set(0)" class="reset-button">Reiniciar</button>
+  </div>
+</div>
