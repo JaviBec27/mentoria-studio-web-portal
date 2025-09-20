@@ -1,9 +1,15 @@
 <app-layout>
   <div class="chat-container">
+
     <div class="chat-messages">
       @for (message of messages(); track $index) {
         <div class="message" [ngClass]="message.type">
-          <p>{{ message.text }}</p>
+          <p> {{ message.text }}</p>
+        </div>
+      }
+      @if (isLoading()) {
+        <div class="message received">
+          <p> ...</p>
         </div>
       }
     </div>

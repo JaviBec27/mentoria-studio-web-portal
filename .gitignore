@@ -43,4 +43,5 @@ Thumbs.db
 
 # Ignorar los archivos de configuración de entornos de Angular
 /src/environments/environment.prod.ts
+/src/environments/environment.ts
 

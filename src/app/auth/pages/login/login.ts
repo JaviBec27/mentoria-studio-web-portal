@@ -3,6 +3,7 @@ import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { AuthService } from '../../services/auth.services';
 
 @Component({
   selector: 'app-login',
@@ -13,7 +14,7 @@ import { InputTextModule } from 'primeng/inputtext';
   standalone: true,
 })
 export class Login {
-  constructor(private router: Router) { }
+  constructor(private router: Router, private authService: AuthService) { }
 
   fb = inject(FormBuilder)
 
@@ -25,23 +26,25 @@ export class Login {
     password: ['', Validators.required],
   });
 
-  login() {
+  async login() {
     if (this.loginForm.invalid) {
-      this.hasError.set(true);
-      setTimeout(() => {
-        this.hasError.set(false);
-      }
-        , 3000);
+      this.loginForm.markAllAsTouched();
       return;
     }
 
-    const { username = '', password = '' } = this.loginForm.value;
-    console.log({ username, password });
+    this.hasError.set(false);
+    this.isposting.set(true);
 
-    // Lógica de autenticación simulada
-    console.log('Iniciando sesión...');
-    this.router.navigate(['/chat']);
-
+    try {
+      const { username, password } = this.loginForm.value;
+      await this.authService.login(username!, password!);
+      this.router.navigate(['/chat']);
+    } catch (error) {
+      this.hasError.set(true);
+      console.error('Login failed:', error);
+    } finally {
+      this.isposting.set(false);
+    }
   }
 }
 

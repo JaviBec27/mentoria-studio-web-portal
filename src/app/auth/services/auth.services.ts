@@ -1,4 +1,12 @@
 import { Injectable, signal } from "@angular/core";
+import { v4 as uuidv4 } from 'uuid';
+export class MiComponente {
+  generarId() {
+    const id = uuidv4();
+    console.log(id); // Ejemplo: '3a01743e-43a4-45e7-8d3e-94f1f77256f1'
+  }
+}
+
 import {
   signIn,
   signUp,
@@ -15,9 +23,14 @@ export class AuthService {
   // Convertimos el estado de autenticación en un Signal para reactividad.
   isAuthenticated = signal(false);
 
+
   constructor() {
     // Comprobamos el estado de autenticación al iniciar el servicio.
     this.isLoggedIn();
+  }
+
+  getSessionId() {
+    return localStorage.getItem('sess_id') || '';
   }
 
   async register(email: string, password: string) {
@@ -61,6 +74,7 @@ export class AuthService {
     try {
       const user = await signIn({ username: email, password });
       this.isAuthenticated.set(true); // Actualizamos el signal.
+      localStorage.setItem('sess_id', uuidv4());
       return user;
     } catch (error) {
       console.error('Error logging in:', error);
@@ -73,6 +87,7 @@ export class AuthService {
     try {
       await signOut();
       this.isAuthenticated.set(false); // Actualizamos el signal.
+      localStorage.removeItem('sess_id');
     } catch (error) {
       console.error('Error logging out:', error);
       throw error;
