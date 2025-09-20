@@ -1,0 +1,44 @@
+<div class="form-container">
+  <form [formGroup]="confirmForm" (ngSubmit)="onConfirm()">
+    <h2>Confirmar Registro</h2>
+    <p>
+      Introduce el código de confirmación que enviamos a tu correo electrónico.
+    </p>
+
+    <div class="p-fluid">
+      <div class="p-field">
+        <label for="email">Email</label>
+        <input id="email" type="email" pInputText formControlName="email" fluid />
+        <small *ngIf="confirmForm.get('email')?.touched && confirmForm.get('email')?.hasError('required')"
+          class="p-error">El email es requerido.</small>
+        <small *ngIf="confirmForm.get('email')?.touched && confirmForm.get('email')?.hasError('email')"
+          class="p-error">El formato del email no es válido.</small>
+      </div>
+
+      <div class="p-field">
+        <label for="code">Código de Confirmación</label>
+        <input id="code" type="text" pInputText formControlName="code" fluid />
+        <small *ngIf="confirmForm.get('code')?.touched && confirmForm.get('code')?.hasError('required')"
+          class="p-error">El código es requerido.</small>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <p-button label="Confirmar Cuenta" styleClass="p-button-primary" type="submit"
+        [disabled]="confirmForm.invalid"></p-button>
+    </div>
+
+    <div *ngIf="errorMessage()" class="error-message">
+      {{ errorMessage() }}
+    </div>
+
+    <div *ngIf="resendMessage()" class="resend-message">
+      {{ resendMessage() }}
+    </div>
+
+    <div class="resend-link">
+      <span>¿No recibiste el código? </span>
+      <a (click)="onResendCode()">Reenviar código</a>
+    </div>
+  </form>
+</div>
