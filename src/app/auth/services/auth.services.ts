@@ -8,6 +8,7 @@ import {
   fetchAuthSession,
   resendSignUpCode,
 } from '@aws-amplify/auth';
+import { from, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -97,6 +98,33 @@ export class AuthService {
       console.error('Error fetching auth session:', error);
       this.isAuthenticated.set(false);
       return false;
+    }
+  }
+
+  checkAuthenticationd(): Observable<boolean> {
+    return from(
+      (async () => {
+        try {
+          // fetchAuthSession valida la sesión actual y refresca tokens si es necesario.
+          await fetchAuthSession();
+          return true;
+        } catch {
+          // Si fetchAuthSession falla (no hay sesión válida), devuelve false.
+          return false;
+        }
+      })()
+    );
+  }
+
+  async getJwtToken(): Promise<string | null> {
+    try {
+      const session = await fetchAuthSession();
+      // El accessToken es el que se debe usar para autorizar peticiones a la API.
+      const token = session.tokens?.accessToken.toString();
+      return token ?? null;
+    } catch {
+      // Si no hay sesión, no hay token.
+      return null;
     }
   }
 
