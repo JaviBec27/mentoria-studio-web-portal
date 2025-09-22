@@ -24,21 +24,37 @@ export class Chat {
   private authService = inject(AuthService);
   private httpService = inject(HttpService);
 
+  /** ID de sesión del usuario */
   readonly sessionId: string = '';
+  /** Lenguaje de la conversación */
   readonly language: string = 'es';
+  /** Ruta del recurso en el backend */
   readonly resourcepath: string = '/chat';
 
+  /** Lista de mensajes en la conversación */
   messages = signal<Message[]>([
     { text: 'Hola, ¿en qué puedo ayudarte hoy?', type: 'received' },
   ]);
+
+  /** Control del campo de entrada del mensaje */
   messageControl = new FormControl('');
+
+  /** Indica si se está cargando una respuesta */
   isLoading = signal(false);
 
+  /**
+   * Constructor de la clase Chat.
+   */
   constructor() {
     this.sessionId = this.authService.getSessionId();
   }
 
-  sendMessage() {
+
+  /**
+   * Envía un mensaje al servidor y maneja la respuesta.
+   * @returns
+   */
+  sendMessage(): void {
     const question = this.messageControl.value;
     if (!question) {
       return;
@@ -56,8 +72,6 @@ export class Chat {
       lang: this.language,
     };
 
-    console.log('Sending chat question:', chatQuestion);
-
     // Call the HTTP service
     this.httpService.post<ChatResponseMessage>(this.resourcepath, chatQuestion)
       .pipe(
@@ -66,7 +80,6 @@ export class Chat {
       )
       .subscribe({
         next: (result) => {
-          console.log('Received chat response:', result);
           let res = this.responseFormat(result);
 
           if (res.status_response === true && res.response) {
@@ -92,23 +105,25 @@ export class Chat {
       });
   }
 
+  /**
+   * Formatea la respuesta del servicio HTTP.
+   * @param response La respuesta recibida del servicio HTTP.
+   * @returns Un objeto ChatResponseMessage con el estado y la respuesta formateada.
+   */
   responseFormat(response: any): ChatResponseMessage {
     try {
-      console.log("Raw response:", response);
       // 1. Intenta convertir el string a un objeto JavaScript/TypeScript.
-      // Esto fallará si el string no es un JSON válido, y saltará al bloque "catch".
       const parsedJson = JSON.parse(response.body);
-      console.log("Parsed JSON:", parsedJson);
 
       // 2. Crea el objeto de respuesta exitosa usando los datos del JSON.
       // Se asume que el JSON tiene la estructura esperada.
-      const myresponse: ChatResponseMessage = {
+      const chatResponse: ChatResponseMessage = {
         status_response: parsedJson.status_response,
         response: this.limpiarRespuesta(parsedJson.response),
         error: null, // No hay error, así que se establece como nulo.
       };
 
-      return myresponse;
+      return chatResponse;
 
     } catch (error) {
       // 3. Si ocurre un error en el bloque "try" (ej. JSON mal formado),
@@ -126,6 +141,11 @@ export class Chat {
     }
   }
 
+  /**
+   * Limpia el texto de entrada eliminando patrones específicos.
+   * @param texto El texto de entrada que puede contener patrones a eliminar.
+   * @returns El texto limpio, sin los patrones especificados.
+   */
   limpiarRespuesta(texto: string): string {
     // Esta es la expresión regular que busca el patrón.
     const patronAEliminar = /(%\[[a-zA-Z0-9]+\]%)+/g;

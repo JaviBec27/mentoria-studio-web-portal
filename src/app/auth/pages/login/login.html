@@ -1,16 +1,21 @@
 <div class="form-container">
   <form [formGroup]="loginForm" (ngSubmit)="login()">
-    <h2>Bienvenido a MentorIA Studio</h2>
+    <div class="form-title">
+      <img src="images/logo_2.png" alt="MentorIA Studio Logo" class="logo">
+    </div>
     <p>Tu asistente académico inteligente</p>
+
 
     <div class="p-fluid">
       <div class="p-field">
         <label for="username">Usuario</label>
-        <input id="username" type="text" pInputText formControlName="username" autocomplete="username" />
+        <input id="username" type="text" pInputText formControlName="username" autocomplete="username" fluid
+          placeholder="Ingresa tu email" />
       </div>
       <div class="p-field">
         <label for="password">Contraseña</label>
-        <input id="password" type="password" pInputText formControlName="password" autocomplete="current-password" />
+        <input id="password" type="password" pInputText formControlName="password" autocomplete="current-password "
+          placeholder="Ingresa tu contraseña" fluid />
       </div>
     </div>
 
@@ -21,7 +26,7 @@
     }
 
     <div class="form-actions">
-      <p-button type="submit" styleClass="p-button-primary my-app-dark"  label="Iniciar Sesión"></p-button>
+      <p-button type="submit" styleClass="p-button-primaryI" label="Iniciar Sesión"></p-button>
     </div>
 
     <div class="login-link">

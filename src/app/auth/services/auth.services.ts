@@ -1,12 +1,5 @@
 import { Injectable, signal } from "@angular/core";
 import { v4 as uuidv4 } from 'uuid';
-export class MiComponente {
-  generarId() {
-    const id = uuidv4();
-    console.log(id); // Ejemplo: '3a01743e-43a4-45e7-8d3e-94f1f77256f1'
-  }
-}
-
 import {
   signIn,
   signUp,
