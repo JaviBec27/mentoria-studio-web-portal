@@ -1,5 +1,8 @@
 export const environment = {
   production: false,
+  captchaConfig: {
+    siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Clave de sitio de prueba de reCAPTCHA v3
+  },
   apiConfig: {
     baseUrl: 'https://mnopiru.execute-api.us-east-1.amazonaws.com/dev'
   },

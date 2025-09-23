@@ -4,6 +4,10 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { AuthService } from '../../services/auth.services';
+import { RecaptchaService } from '../../services/recaptcha.service';
+import { HttpService } from '../../../shared/services/http.service';
+import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -14,7 +18,10 @@ import { AuthService } from '../../services/auth.services';
   standalone: true,
 })
 export class Login {
-  constructor(private router: Router, private authService: AuthService) { }
+  constructor(private router: Router,
+    private authService: AuthService,
+    private recaptchaService: RecaptchaService,
+    private httpService: HttpService) { }
 
   fb = inject(FormBuilder)
 
@@ -36,6 +43,12 @@ export class Login {
     this.isposting.set(true);
 
     try {
+
+      const isCaptchaValid = await this.validateCaptcha();
+      if (!isCaptchaValid) {
+        throw new Error('Su sesión ha expirado. Por favor, recargue la página e intente nuevamente.');
+      }
+
       const { username, password } = this.loginForm.value;
       await this.authService.login(username!, password!);
       this.router.navigate(['/chat']);
@@ -46,6 +59,24 @@ export class Login {
       this.isposting.set(false);
     }
   }
+
+  validateCaptcha(): Observable<boolean> {
+    return this.recaptchaService.execute('login').then((token: string) => {
+      console.log('Token de reCAPTCHA recibido en login:', token);
+      return this.httpService.post('/recaptcha-validate', { recaptchaToken: token }).pipe(
+        map((response: any) => {
+          console.log('Respuesta de validación de reCAPTCHA:', response);
+          console.log('¿El token de reCAPTCHA es válido?', response.body);
+          // Asegurarse de que response.success es un booleano
+          const responseBody = JSON.parse(response.body);
+          return responseBody.success === true;
+        })
+      );
+    }) as unknown as Observable<boolean>;
+  }
+
 }
+
+
 
 
