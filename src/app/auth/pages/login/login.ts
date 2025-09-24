@@ -73,11 +73,8 @@ export class Login {
 
   validateCaptcha(): Observable<boolean> {
     return this.recaptchaService.execute('login').then((token: string) => {
-      console.log('Token de reCAPTCHA recibido en login:', token);
       return this.httpService.post('/recaptcha-validate', { recaptchaToken: token }).pipe(
         map((response: any) => {
-          console.log('Respuesta de validación de reCAPTCHA:', response);
-          console.log('¿El token de reCAPTCHA es válido?', response.body);
           // Asegurarse de que response.success es un booleano
           const responseBody = JSON.parse(response.body);
           return responseBody.success === true;

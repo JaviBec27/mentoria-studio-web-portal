@@ -1,18 +1,20 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AppLayout } from '../../shared/components/layout/app-layout/app-layout';
+import { WebSocketService } from '../../shared/services/websocket.service';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../auth/services/auth.services';
-import { HttpService } from '../../shared/services/http.service';
-import { ChatQuestionMessage, ChatResponseMessage } from './chatmodel';
-import { finalize } from 'rxjs';
-import { parseJsonString } from '../../shared/operators/parse-json.operator';
-
-
 
 interface Message {
   text: string;
   type: 'sent' | 'received';
+}
+
+interface ChatResponseMessage {
+  status_response: boolean;
+  response: string | null;
+  error: string | null;
 }
 
 @Component({
@@ -22,9 +24,10 @@ interface Message {
   styleUrl: './chat.scss',
   standalone: true,
 })
-export class Chat {
+export class Chat implements OnInit, OnDestroy {
+  private webSocketService = inject(WebSocketService);
   private authService = inject(AuthService);
-  private httpService = inject(HttpService);
+  private messageSubscription!: Subscription;
 
   /** ID de sesión del usuario */
   readonly sessionId: string = '';
@@ -51,6 +54,70 @@ export class Chat {
     this.sessionId = this.authService.getSessionId();
   }
 
+  async ngOnInit(): Promise<void> {
+    // Obtiene el accessToken para la conexión.
+    try {
+      const token = await this.authService.getAccessToken();
+      if (token) {
+        // Inicia la conexión al WebSocket y se suscribe a los mensajes.
+        this.webSocketService.connect(token).subscribe();
+        this.subscribeToMessages();
+      } else {
+        console.error('No se pudo obtener el token de acceso para WebSocket.');
+        this.messages.update((messages) => [
+          ...messages,
+          { text: 'Error de autenticación. No se pudo conectar.', type: 'received' },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error al obtener el token de acceso:', error);
+      this.messages.update((messages) => [
+        ...messages,
+        { text: 'Error de autenticación. No se pudo conectar.', type: 'received' },
+      ]);
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Limpia la suscripción y cierra la conexión para evitar fugas de memoria
+    if (this.messageSubscription) {
+      this.messageSubscription.unsubscribe();
+    }
+    this.webSocketService.close();
+  }
+
+  /**
+   * Se suscribe a los mensajes entrantes del WebSocket y actualiza la interfaz.
+   */
+  private subscribeToMessages(): void {
+    this.messageSubscription = this.webSocketService.messages$.subscribe({
+      next: (message) => {
+        const formattedResponse = this.responseFormat(message);
+        if (formattedResponse.status_response && formattedResponse.response) {
+          this.messages.update((messages) => [
+            ...messages,
+            { text: formattedResponse.response as string, type: 'received' },
+          ]);
+        } else {
+          const errorText = formattedResponse.error || 'Respuesta no válida del servidor.';
+          this.messages.update((messages) => [
+            ...messages,
+            { text: errorText, type: 'received' },
+          ]);
+          console.error('Error en la respuesta:', formattedResponse.error);
+        }
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Error en la suscripción de mensajes WebSocket:', err);
+        this.messages.update((messages) => [
+          ...messages,
+          { text: 'Error de conexión con el servidor.', type: 'received' },
+        ]);
+        this.isLoading.set(false);
+      }
+    });
+  }
 
   /**
    * Envía un mensaje al servidor y maneja la respuesta.
@@ -67,46 +134,16 @@ export class Chat {
     this.messageControl.setValue('');
     this.isLoading.set(true);
 
-    // Prepare the message for the backend
-    let chatQuestion: ChatQuestionMessage = {
+    // Ajusta este payload al formato exacto que tu backend de WebSocket espera
+    const payload = {
+      action: 'sendMessage', // O la acción que tu backend espere, ej: 'message'
       sessionId: this.sessionId,
-      question: question,
       lang: this.language,
+      question: question
+
     };
 
-
-
-    // Call the HTTP service
-    this.httpService.post<ChatResponseMessage>(this.resourcepath, chatQuestion)
-      .pipe(
-        parseJsonString<ChatResponseMessage>(),
-        finalize(() => this.isLoading.set(false))
-      )
-      .subscribe({
-        next: (result) => {
-          let res = this.responseFormat(result);
-
-          if (res.status_response === true && res.response) {
-            this.messages.update((messages) => [
-              ...messages,
-              { text: res.response!, type: 'received' },
-            ]);
-          } else {
-            const errorMessage = res.error || 'No se recibió una respuesta válida.';
-            this.messages.update((messages) => [
-              ...messages,
-              { text: errorMessage, type: 'received' },
-            ]);
-          }
-        },
-        error: (err) => {
-          console.error('Error sending message:', err);
-          this.messages.update((messages) => [
-            ...messages,
-            { text: 'Error al conectar con el servidor. Por favor, intenta de nuevo.', type: 'received' },
-          ]);
-        }
-      });
+    this.webSocketService.sendMessage(payload);
   }
 
   /**
@@ -117,7 +154,8 @@ export class Chat {
   responseFormat(response: any): ChatResponseMessage {
     try {
       // 1. Intenta convertir el string a un objeto JavaScript/TypeScript.
-      const parsedJson = JSON.parse(response.body);
+      // Asumimos que el mensaje del WebSocket es un string JSON.
+      const parsedJson = response;
 
       // 2. Crea el objeto de respuesta exitosa usando los datos del JSON.
       // Se asume que el JSON tiene la estructura esperada.

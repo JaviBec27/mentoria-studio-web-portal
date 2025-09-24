@@ -6,6 +6,9 @@ export const environment = {
   apiConfig: {
     baseUrl: 'https://mnopiru.execute-api.us-east-1.amazonaws.com/dev'
   },
+  wsConfig: {
+    url: 'wss://example-websocket-endpoint.amazonaws.com/dev', // Reemplaza con tu endpoint de WebSocket
+  },
   awsAuthConfig: {
     aws_project_region: 'us-east-1',
     aws_cognito_region: 'us-east-1',

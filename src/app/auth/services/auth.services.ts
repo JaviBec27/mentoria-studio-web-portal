@@ -116,7 +116,7 @@ export class AuthService {
     );
   }
 
-  async getJwtToken(): Promise<string | null> {
+  async getAccessToken(): Promise<string | null> {
     try {
       const session = await fetchAuthSession();
       // El accessToken es el que se debe usar para autorizar peticiones a la API.
