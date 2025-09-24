@@ -8,6 +8,8 @@ import { ChatQuestionMessage, ChatResponseMessage } from './chatmodel';
 import { finalize } from 'rxjs';
 import { parseJsonString } from '../../shared/operators/parse-json.operator';
 
+
+
 interface Message {
   text: string;
   type: 'sent' | 'received';
@@ -71,6 +73,8 @@ export class Chat {
       question: question,
       lang: this.language,
     };
+
+
 
     // Call the HTTP service
     this.httpService.post<ChatResponseMessage>(this.resourcepath, chatQuestion)
@@ -153,6 +157,5 @@ export class Chat {
     // Reemplaza todas las coincidencias del patrón con un string vacío "".
     return texto.replace(patronAEliminar, '');
   }
-
 
 }

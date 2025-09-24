@@ -8,7 +8,6 @@ export const authGuard: CanActivateFn = (route, state) => {
 
 
   return authService.isLoggedIn().then((isAuthenticated) => {
-    console.log('User is authenticated:', isAuthenticated);
     if (isAuthenticated) {
       return true;
     } else {

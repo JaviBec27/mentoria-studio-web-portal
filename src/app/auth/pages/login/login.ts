@@ -21,7 +21,14 @@ export class Login {
   constructor(private router: Router,
     private authService: AuthService,
     private recaptchaService: RecaptchaService,
-    private httpService: HttpService) { }
+    private httpService: HttpService) {
+    // Check if user is already logged in
+    authService.isLoggedIn().then((isAuthenticated) => {
+      if (isAuthenticated) {
+        authService.logout();
+      }
+    });
+  }
 
   fb = inject(FormBuilder)
 
@@ -34,6 +41,10 @@ export class Login {
   });
 
   async login() {
+
+
+
+
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;

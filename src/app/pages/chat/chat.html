@@ -3,20 +3,21 @@
 
     <div class="chat-messages">
       @for (message of messages(); track $index) {
-        <div class="message" [ngClass]="message.type">
-          <p> {{ message.text }}</p>
-        </div>
+      <div class="message" [ngClass]="message.type">
+        <p class="newline-format"> {{ message.text }} </p>
+      </div>
       }
       @if (isLoading()) {
-        <div class="message received">
-          <p> ...</p>
-        </div>
+      <div class="message received">
+        <p> ...</p>
+      </div>
       }
     </div>
     <div class="chat-input">
-      <input type="text" placeholder="Escribe tu mensaje..." [formControl]="messageControl" (keyup.enter)="sendMessage()" />
+      <input type="text" placeholder="Escribe tu mensaje..." [formControl]="messageControl"
+        (keyup.enter)="sendMessage()" />
       <button (click)="sendMessage()">Enviar</button>
     </div>
   </div>
-</app-layout>
 
+</app-layout>

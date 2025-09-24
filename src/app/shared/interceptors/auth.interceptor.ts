@@ -17,9 +17,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return from(authService.getJwtToken()).pipe(
     switchMap(token => {
-
-      console.log('Auth Interceptor - Token:', token);
-
       // Si tenemos un token, clonamos la petición y añadimos la cabecera de autorización.
       if (token) {
         const clonedReq = req.clone({

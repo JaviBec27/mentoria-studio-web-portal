@@ -1,0 +1,26 @@
+html:root {
+  color-scheme: light !important;
+}
+
+/* Forzar tema claro y sobrescribir estilos de navegador en modo oscuro */
+@media (prefers-color-scheme: dark) {
+  :root, body {
+    /* Asegura que el esquema de colores base sea siempre claro */
+    color-scheme: light;
+
+    /* Sobrescribe colores de fondo y texto que el navegador podría inyectar */
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+  }
+
+  /*
+   * Asegura que los elementos de formulario, que son los más propensos
+   * a ser estilizados por el navegador en modo oscuro, mantengan
+   * un fondo claro y texto oscuro.
+   */
+  input, textarea, select {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    border: 1px solid #cccccc; /* Añade un borde para visibilidad */
+  }
+}

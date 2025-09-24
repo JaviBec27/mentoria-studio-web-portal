@@ -13,7 +13,7 @@
     <div class="p-fluid">
       <div class="p-field">
         <label for="email">Email</label>
-        <input id="email" type="email" pInputText formControlName="email" fluid />
+        <input id="email" type="email" pInputText formControlName="email" fluid placeholder="Ingresa tu email" />
         <small *ngIf="confirmForm.get('email')?.touched && confirmForm.get('email')?.hasError('required')"
           class="p-error">El email es requerido.</small>
         <small *ngIf="confirmForm.get('email')?.touched && confirmForm.get('email')?.hasError('email')"
@@ -22,7 +22,7 @@
 
       <div class="p-field">
         <label for="code">Código de Confirmación</label>
-        <input id="code" type="text" pInputText formControlName="code" fluid />
+        <input id="code" type="text" pInputText formControlName="code" fluid placeholder="Ingresa el código de confirmación" />
         <small *ngIf="confirmForm.get('code')?.touched && confirmForm.get('code')?.hasError('required')"
           class="p-error">El código es requerido.</small>
       </div>
