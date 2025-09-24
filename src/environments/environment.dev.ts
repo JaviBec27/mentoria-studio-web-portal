@@ -1,19 +1,20 @@
 export const environment = {
-  production: true,
+  production: false,
   captchaConfig: {
-    siteKey: '6LcaBdIrAAAAANHzk9AnBhdrS1msXczdF3UPDC5n', // Clave de sitio de prueba de reCAPTCHA v3
+    siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Clave de sitio de prueba de reCAPTCHA v3
   },
   apiConfig: {
-    baseUrl: 'https://m1pk71j2d6.execute-api.us-east-1.amazonaws.com/dev'
+    baseUrl: 'https://mnopiru.execute-api.us-east-1.amazonaws.com/dev'
   },
   wsConfig: {
-    url: 'wss://b6k7eyghrh.execute-api.us-east-1.amazonaws.com/dev', // Reemplaza con tu endpoint de WebSocket
+    url: 'wss://example-websocket-endpoint.amazonaws.com/dev', // Reemplaza con tu endpoint de WebSocket
   },
   awsAuthConfig: {
     aws_project_region: 'us-east-1',
     aws_cognito_region: 'us-east-1',
-    aws_user_pools_id: 'us-east-1_19pXhcTel',
-    aws_user_pools_web_client_id: '6a9kla0j038jng3fr7vfr80i6f',
+    aws_user_pools_id: 'us-east-1_45dfrtghj',
+    aws_user_pools_web_client_id: '809tuf3n5exampleid123456',
     authenticationFlowType: 'USER_PASSWORD_AUTH',
   },
 };
+
