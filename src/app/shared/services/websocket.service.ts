@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { Observable, Subject, EMPTY } from 'rxjs';
+import { Observable, Subject, EMPTY, Subscription, interval } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
@@ -11,6 +11,7 @@ export class WebSocketService {
   private socket$!: WebSocketSubject<any>;
   private messagesSubject = new Subject<any>();
   public messages$: Observable<any> = this.messagesSubject.asObservable();
+  private heartbeatSubscription!: Subscription;
 
   /**
    * Establece la conexión con el servidor WebSocket, incluyendo un token de autenticación.
@@ -20,20 +21,24 @@ export class WebSocketService {
   public connect(accessToken: string): Observable<void> {
     return new Observable((observer) => {
       if (!this.socket$ || this.socket$.closed) {
+        console.log('WebSocket: Intentando conectar...');
 
         // Construye la URL con el token como query parameter 'Authorization'
         const url = `${environment.wsConfig.url}?Authorization=${accessToken}`;
+        console.log('WebSocket: Usando URL:', url);
 
         this.socket$ = webSocket({
           url: url,
           openObserver: {
             next: () => {
-              console.log('WebSocket: Conexión exitosa.');
+              console.log('WebSocket: Conexión establecida exitosamente.');
+              this.startHeartbeat();
             },
           },
           closeObserver: {
             next: () => {
               console.log('WebSocket: Conexión cerrada.');
+              this.stopHeartbeat();
             },
           },
         });
@@ -41,7 +46,7 @@ export class WebSocketService {
         this.socket$
           .pipe(
             tap({
-              //error: (error) => console.error('WebSocket: Error en la conexión.', error),
+              error: (error) => console.error('WebSocket: Error en la conexión.', error),
             }),
             catchError((_) => EMPTY) // Evita que el observable principal de mensajes se cierre en caso de error
           )
@@ -61,6 +66,7 @@ export class WebSocketService {
    */
   public sendMessage(msg: any): void {
     if (this.socket$) {
+      console.log('WebSocket: Enviando mensaje:', msg);
       this.socket$.next(msg);
     } else {
       console.error('WebSocket no está conectado. No se puede enviar el mensaje.');
@@ -71,8 +77,33 @@ export class WebSocketService {
    * Cierra la conexión WebSocket.
    */
   public close(): void {
+    this.stopHeartbeat();
     if (this.socket$) {
       this.socket$.complete();
+      // @ts-ignore
+      this.socket$ = null;
+    }
+  }
+
+  /**
+   * Inicia el envío periódico de pings para mantener la conexión activa.
+   */
+  private startHeartbeat(): void {
+    console.log('WebSocket: Iniciando heartbeat.');
+    this.heartbeatSubscription = interval(30000).subscribe(() => {
+      const pingPayload = { action: 'ping' };
+      console.log('WebSocket: Enviando ping para mantener la conexión viva.', pingPayload);
+      this.sendMessage(pingPayload);
+    });
+  }
+
+  /**
+   * Detiene el envío de pings.
+   */
+  private stopHeartbeat(): void {
+    if (this.heartbeatSubscription) {
+      console.log('WebSocket: Deteniendo heartbeat.');
+      this.heartbeatSubscription.unsubscribe();
     }
   }
 }
