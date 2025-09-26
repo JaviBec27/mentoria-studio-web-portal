@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
+import { ConsoleLogService } from '../../shared/services/console-log.service';
 
 // Le decimos a TypeScript que el objeto 'grecaptcha' existirá en el scope global (window).
 // Esto evita errores de compilación.
@@ -10,7 +11,7 @@ declare const grecaptcha: any;
 })
 export class RecaptchaService {
 
-  constructor() { }
+  constructor(private logger: ConsoleLogService) { }
 
   /**
    * Ejecuta la verificación de reCAPTCHA v3 para una acción específica.
@@ -26,7 +27,7 @@ export class RecaptchaService {
             resolve(token);
           })
           .catch((error: any) => {
-            console.error('reCAPTCHA execution error:', error);
+            this.logger.error('reCAPTCHA execution error:', error);
             reject(error);
           });
       });

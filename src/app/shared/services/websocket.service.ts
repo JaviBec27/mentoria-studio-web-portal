@@ -3,15 +3,23 @@ import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { Observable, Subject, EMPTY, Subscription, interval } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { ConsoleLogService } from './console-log.service';
 
+/**
+ * Servicio para gestionar la comunicación a través de WebSockets.
+ * Maneja la conexión, el envío/recepción de mensajes y el mantenimiento de la conexión (heartbeat).
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class WebSocketService {
   private socket$!: WebSocketSubject<any>;
   private messagesSubject = new Subject<any>();
+  /** Observable que emite los mensajes recibidos del servidor WebSocket. */
   public messages$: Observable<any> = this.messagesSubject.asObservable();
   private heartbeatSubscription!: Subscription;
+
+  constructor(private logger: ConsoleLogService) { }
 
   /**
    * Establece la conexión con el servidor WebSocket, incluyendo un token de autenticación.
@@ -21,7 +29,7 @@ export class WebSocketService {
   public connect(accessToken: string): Observable<void> {
     return new Observable((observer) => {
       if (!this.socket$ || this.socket$.closed) {
-        console.log('WebSocket: Intentando conectar...');
+        this.logger.log('WebSocket: Intentando conectar...');
 
         // Construye la URL con el token como query parameter 'Authorization'
         const url = `${environment.wsConfig.url}?Authorization=${accessToken}`;
@@ -30,13 +38,13 @@ export class WebSocketService {
           url: url,
           openObserver: {
             next: () => {
-              console.log('WebSocket: Conexión establecida exitosamente.');
+              this.logger.log('WebSocket: Conexión establecida exitosamente.');
               this.startHeartbeat();
             },
           },
           closeObserver: {
             next: () => {
-              console.log('WebSocket: Conexión cerrada.');
+              this.logger.log('WebSocket: Conexión cerrada.');
               this.stopHeartbeat();
             },
           },
@@ -45,12 +53,12 @@ export class WebSocketService {
         this.socket$
           .pipe(
             tap({
-              error: (error) => console.error('WebSocket: Error en la conexión.', error),
+              error: (error) => this.logger.error('WebSocket: Error en la conexión.', error),
             }),
             catchError((_) => EMPTY) // Evita que el observable principal de mensajes se cierre en caso de error
           )
           .subscribe((message) => {
-            console.log('WebSocket: Mensaje recibido:', message);
+            this.logger.log('WebSocket: Mensaje recibido:', message);
             this.messagesSubject.next(message);
           });
       }
@@ -65,10 +73,10 @@ export class WebSocketService {
    */
   public sendMessage(msg: any): void {
     if (this.socket$) {
-      console.log('WebSocket: Enviando mensaje:', msg);
+      this.logger.log('WebSocket: Enviando mensaje:', msg);
       this.socket$.next(msg);
     } else {
-      console.error('WebSocket no está conectado. No se puede enviar el mensaje.');
+      this.logger.error('WebSocket no está conectado. No se puede enviar el mensaje.');
     }
   }
 
@@ -88,14 +96,13 @@ export class WebSocketService {
    * Inicia el envío periódico de pings para mantener la conexión activa.
    */
   private startHeartbeat(): void {
-    console.log('WebSocket: Iniciando heartbeat.');
+    this.logger.log('WebSocket: Iniciando heartbeat.');
     this.heartbeatSubscription = interval(environment.wsConfig.intervalKeepAlive).subscribe(() => {
       const pingPayload = { action: 'ping' };
-      console.log('WebSocket: Enviando ping para mantener la conexión viva.', pingPayload);
+      this.logger.log('WebSocket: Enviando ping para mantener la conexión viva.', pingPayload);
       this.sendMessage(pingPayload);
     }, error => {
-      if (!environment.production)
-        console.error('WebSocket: Error en el heartbeat.', error);
+      this.logger.error('WebSocket: Error en el heartbeat.', error);
     });
   }
 
@@ -104,7 +111,7 @@ export class WebSocketService {
    */
   private stopHeartbeat(): void {
     if (this.heartbeatSubscription) {
-      console.log('WebSocket: Deteniendo heartbeat.');
+      this.logger.log('WebSocket: Deteniendo heartbeat.');
       this.heartbeatSubscription.unsubscribe();
     }
   }

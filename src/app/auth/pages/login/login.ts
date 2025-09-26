@@ -3,7 +3,7 @@ import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { AuthService } from '../../services/auth.services';
+import { AuthService } from '../../services/auth.service';
 import { RecaptchaService } from '../../services/recaptcha.service';
 import { HttpService } from '../../../shared/services/http.service';
 import { map } from 'rxjs/operators';

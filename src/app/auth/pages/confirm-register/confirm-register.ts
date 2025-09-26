@@ -4,8 +4,13 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { AuthService } from '../../services/auth.services';
+import { AuthService } from '../../services/auth.service';
+import { ConsoleLogService } from '../../../shared/services/console-log.service';
 
+/**
+ * Componente para la página de confirmación de registro.
+ * Permite a los usuarios confirmar su cuenta usando un código enviado a su email.
+ */
 @Component({
   selector: 'app-confirm-register',
   standalone: true,
@@ -24,9 +29,13 @@ export class ConfirmRegister {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private logger = inject(ConsoleLogService);
 
+  /** Formulario para la confirmación de registro. */
   public confirmForm: FormGroup;
+  /** Signal para almacenar y mostrar mensajes de error. */
   public errorMessage = signal<string | null>(null);
+  /** Signal para mostrar un mensaje de éxito al reenviar el código. */
   public resendMessage = signal<string | null>(null);
 
   constructor() {
@@ -43,6 +52,10 @@ export class ConfirmRegister {
     });
   }
 
+  /**
+   * Maneja el envío del formulario de confirmación.
+   * Llama al servicio de autenticación para confirmar el registro y redirige al login si tiene éxito.
+   */
   async onConfirm() {
     if (this.confirmForm.invalid) {
       this.confirmForm.markAllAsTouched();
@@ -55,10 +68,14 @@ export class ConfirmRegister {
       // On success, redirect to login with a success message
       this.router.navigate(['/auth/login'], { queryParams: { confirmed: 'true' } });
     } catch (error: any) {
+      this.logger.error('Error confirming registration:', error);
       this.errorMessage.set(error.message || 'Ocurrió un error al confirmar el registro.');
     }
   }
 
+  /**
+   * Maneja la solicitud de reenvío del código de confirmación.
+   */
   async onResendCode() {
     this.errorMessage.set(null);
     this.resendMessage.set(null);
@@ -72,6 +89,7 @@ export class ConfirmRegister {
       await this.authService.resendSignUpCode(email);
       this.resendMessage.set('Se ha reenviado un nuevo código a tu correo.');
     } catch (error: any) {
+      this.logger.error('Error resending code:', error);
       this.errorMessage.set(error.message || 'Ocurrió un error al reenviar el código.');
     }
   }

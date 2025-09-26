@@ -4,9 +4,15 @@ import { CommonModule } from '@angular/common';
 import { AppLayout } from '../../shared/components/layout/app-layout/app-layout';
 import { WebSocketService } from '../../shared/services/websocket.service';
 import { Subscription } from 'rxjs';
-import { AuthService } from '../../auth/services/auth.services';
+import { AuthService } from '../../auth/services/auth.service';
 import { Message, Interaction, ChatResponseMessage, isChatResponseMessage, isConnectionInfoMessage, FormattedResponse } from './chatmodel';
+import { ConsoleLogService } from '../../shared/services/console-log.service';
 
+/**
+ * Componente principal para la funcionalidad de chat.
+ * Gestiona la conexión WebSocket, el envío y recepción de mensajes,
+ * y la visualización de la conversación en la interfaz de usuario.
+ */
 @Component({
   selector: 'app-chat',
   imports: [AppLayout, ReactiveFormsModule, CommonModule],
@@ -17,6 +23,7 @@ import { Message, Interaction, ChatResponseMessage, isChatResponseMessage, isCon
 export class Chat implements OnInit, OnDestroy {
   private webSocketService = inject(WebSocketService);
   private authService = inject(AuthService);
+  private logger = inject(ConsoleLogService);
   private messageSubscription!: Subscription;
 
   /** ID de sesión del usuario */
@@ -56,14 +63,14 @@ export class Chat implements OnInit, OnDestroy {
         this.webSocketService.connect(token).subscribe();
         this.subscribeToMessages();
       } else {
-        console.error('No se pudo obtener el token de acceso para WebSocket.');
+        this.logger.error('No se pudo obtener el token de acceso para WebSocket.');
         this.messages.update((messages) => [
           ...messages,
           { text: 'Error de autenticación. No se pudo conectar.', type: 'received' },
         ]);
       }
     } catch (error) {
-      console.error('Error al obtener el token de acceso:', error);
+      this.logger.error('Error al obtener el token de acceso:', error);
       this.messages.update((messages) => [
         ...messages,
         { text: 'Error de autenticación. No se pudo conectar.', type: 'received' },
@@ -109,14 +116,14 @@ export class Chat implements OnInit, OnDestroy {
               ...messages,
               { text: errorText, type: 'received' },
             ]);
-            console.error('Error en la respuesta:', formattedResponse.error);
+            this.logger.error('Error en la respuesta:', formattedResponse.error);
           }
           this.isLoading.set(false);
         }
         // Si formattedResponse es null (ej. mensaje de conexión), no hace nada en la UI de chat.
       },
       error: (err) => {
-        console.error('Error en la suscripción de mensajes WebSocket:', err);
+        this.logger.error('Error en la suscripción de mensajes WebSocket:', err);
         this.messages.update((messages) => [
           ...messages,
           { text: 'Error de conexión con el servidor.', type: 'received' },
@@ -161,7 +168,7 @@ export class Chat implements OnInit, OnDestroy {
    * @returns Un objeto ChatResponseMessage, o null si el mensaje no es para el chat.
    */
   responseFormat(response: any): FormattedResponse {
-    console.log("*********Respuesta recibida:", response);
+    this.logger.log('Respuesta recibida:', response);
 
     if (isChatResponseMessage(response)) {
       // Es un mensaje de chat, lo procesamos.
@@ -174,12 +181,12 @@ export class Chat implements OnInit, OnDestroy {
 
     if (isConnectionInfoMessage(response)) {
       // Es un mensaje informativo de conexión, lo registramos y lo ignoramos para la UI.
-      console.log('Mensaje de conexión recibido:', response.message);
+      this.logger.log('Mensaje de conexión recibido:', response.message);
       return null;
     }
 
     // Si no es ninguno de los tipos conocidos, es un formato inesperado.
-    console.error("El formato de la respuesta recibida es inválido:", response);
+    this.logger.error("El formato de la respuesta recibida es inválido:", response);
     return {
       status_response: false,
       response: null,
@@ -206,7 +213,7 @@ export class Chat implements OnInit, OnDestroy {
       }
       return newHistory;
     });
-    console.log('Historial de interacciones actualizado:', this.interactionHistory());
+    this.logger.log('Historial de interacciones actualizado:', this.interactionHistory());
   }
 
   /**
