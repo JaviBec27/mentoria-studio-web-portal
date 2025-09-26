@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { Observable, Subject, EMPTY, Subscription, interval } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
-import { ConsoleLogService } from './console-log.service';
+import { environment } from '@environments/environment';
+import { ConsoleLogService } from '@SharedServices/console-log.service';
 
 /**
  * Servicio para gestionar la comunicación a través de WebSockets.

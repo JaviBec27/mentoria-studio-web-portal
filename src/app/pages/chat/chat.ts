@@ -1,12 +1,12 @@
 import { Component, signal, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { AppLayout } from '../../shared/components/layout/app-layout/app-layout';
-import { WebSocketService } from '../../shared/services/websocket.service';
+import { AppLayout } from '@SharedLayout/app-layout/app-layout';
+import { WebSocketService } from '@SharedServices/websocket.service';
 import { Subscription } from 'rxjs';
-import { AuthService } from '../../auth/services/auth.service';
+import { AuthService } from '@AuthServices/auth.service';
 import { Message, Interaction, ChatResponseMessage, isChatResponseMessage, isConnectionInfoMessage, FormattedResponse } from './chatmodel';
-import { ConsoleLogService } from '../../shared/services/console-log.service';
+import { ConsoleLogService } from '@SharedServices/console-log.service';
 
 /**
  * Componente principal para la funcionalidad de chat.

@@ -1,8 +1,8 @@
 import { Injectable, NgZone } from '@angular/core';
 import { fromEvent, merge, Subject, Subscription, timer } from 'rxjs';
 import { switchMap, throttleTime } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
-import { ConsoleLogService } from './console-log.service';
+import { environment } from '@environments/environment';
+import { ConsoleLogService } from '@SharedServices/console-log.service';
 
 /**
  * Servicio para detectar la inactividad del usuario y gestionar el cierre de sesión automático.

@@ -9,7 +9,7 @@ import {
   resendSignUpCode,
 } from '@aws-amplify/auth';
 import { Router } from "@angular/router";
-import { ConsoleLogService } from "../../shared/services/console-log.service";
+import { ConsoleLogService } from '@SharedServices/console-log.service';
 
 /**
  * Servicio para gestionar la autenticación de usuarios con AWS Amplify.

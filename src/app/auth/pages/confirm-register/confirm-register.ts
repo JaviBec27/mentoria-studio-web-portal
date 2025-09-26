@@ -4,8 +4,8 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { AuthService } from '../../services/auth.service';
-import { ConsoleLogService } from '../../../shared/services/console-log.service';
+import { AuthService } from '@AuthServices/auth.service';
+import { ConsoleLogService } from '@SharedServices/console-log.service';
 
 /**
  * Componente para la página de confirmación de registro.

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
-import { ConsoleLogService } from '../../shared/services/console-log.service';
+import { environment } from '@environments/environment';
+import { ConsoleLogService } from '@SharedServices/console-log.service';
 
 // Le decimos a TypeScript que el objeto 'grecaptcha' existirá en el scope global (window).
 // Esto evita errores de compilación.

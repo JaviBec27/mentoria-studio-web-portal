@@ -1,12 +1,12 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { InactivityService } from '../../../services/inactivity.service';
-import { AuthService } from '../../../../auth/services/auth.service';
+import { InactivityService } from '@SharedServices/inactivity.service';
+import { AuthService } from '@AuthServices/auth.service';
 import { Subscription, timer } from 'rxjs';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
-import { environment } from '../../../../../environments/environment';
-import { ConsoleLogService } from '../../../services/console-log.service';
+import { environment } from '@environments/environment';
+import { ConsoleLogService } from '@SharedServices/console-log.service';
 
 /**
  * Componente de la cabecera de la aplicación.

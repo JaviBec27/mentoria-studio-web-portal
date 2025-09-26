@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { AuthService } from '../../../../auth/services/auth.service';
-import { ConsoleLogService } from '../../../services/console-log.service';
+import { AuthService } from '@AuthServices/auth.service';
+import { ConsoleLogService } from '@SharedServices/console-log.service';
 
 /**
  * Componente de la barra lateral de la aplicación.

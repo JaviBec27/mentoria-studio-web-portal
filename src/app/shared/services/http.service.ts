@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { ConsoleLogService } from './console-log.service';
+import { environment } from '@environments/environment';
+import { ConsoleLogService } from '@SharedServices/console-log.service';
 
 /**
  * Servicio genérico para realizar peticiones HTTP.

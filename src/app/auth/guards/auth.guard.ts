@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
-import { ConsoleLogService } from '../../shared/services/console-log.service';
+import { AuthService } from '@AuthServices/auth.service';
+import { ConsoleLogService } from '@SharedServices/console-log.service';
 
 /**
  * Guardia de ruta para proteger las rutas que requieren autenticación.

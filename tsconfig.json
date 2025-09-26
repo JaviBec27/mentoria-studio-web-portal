@@ -3,6 +3,14 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@SharedLayout/*": ["src/app/shared/components/layout/*"],
+      "@SharedInterceptors/*": ["src/app/shared/interceptors/*"],
+      "@AuthServices/*": ["src/app/auth/services/*"],
+      "@SharedServices/*": ["src/app/shared/services/*"],
+      "@environments/*": ["src/environments/*"]
+    },
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
