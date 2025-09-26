@@ -25,7 +25,7 @@ export class Login {
     // Check if user is already logged in
     authService.isLoggedIn().then((isAuthenticated) => {
       if (isAuthenticated) {
-        authService.logout();
+        this.router.navigate(['/chat']);
       }
     });
   }
@@ -76,8 +76,11 @@ export class Login {
       return this.httpService.post('/recaptcha-validate', { recaptchaToken: token }).pipe(
         map((response: any) => {
           // Asegurarse de que response.success es un booleano
-          const responseBody = JSON.parse(response.body);
-          return responseBody.success === true;
+          if (response && response.body) {
+            const responseBody = JSON.parse(response.body);
+            return responseBody.success === true;
+          }
+          return false;
         })
       );
     }) as unknown as Observable<boolean>;

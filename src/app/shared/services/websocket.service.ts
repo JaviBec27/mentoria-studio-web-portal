@@ -25,7 +25,6 @@ export class WebSocketService {
 
         // Construye la URL con el token como query parameter 'Authorization'
         const url = `${environment.wsConfig.url}?Authorization=${accessToken}`;
-        console.log('WebSocket: Usando URL:', url);
 
         this.socket$ = webSocket({
           url: url,
@@ -90,10 +89,13 @@ export class WebSocketService {
    */
   private startHeartbeat(): void {
     console.log('WebSocket: Iniciando heartbeat.');
-    this.heartbeatSubscription = interval(30000).subscribe(() => {
+    this.heartbeatSubscription = interval(environment.wsConfig.intervalKeepAlive).subscribe(() => {
       const pingPayload = { action: 'ping' };
       console.log('WebSocket: Enviando ping para mantener la conexión viva.', pingPayload);
       this.sendMessage(pingPayload);
+    }, error => {
+      if (!environment.production)
+        console.error('WebSocket: Error en el heartbeat.', error);
     });
   }
 

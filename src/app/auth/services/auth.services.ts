@@ -8,7 +8,7 @@ import {
   fetchAuthSession,
   resendSignUpCode,
 } from '@aws-amplify/auth';
-import { from, Observable } from 'rxjs';
+import { Router } from "@angular/router";
 
 @Injectable({
   providedIn: 'root'
@@ -18,13 +18,21 @@ export class AuthService {
   isAuthenticated = signal(false);
 
 
-  constructor() {
+  constructor(private router: Router) {
     // Comprobamos el estado de autenticación al iniciar el servicio.
     this.isLoggedIn();
   }
 
   getSessionId() {
     return localStorage.getItem('sess_id') || '';
+  }
+
+  setSessionId(): void {
+    localStorage.setItem('sess_id', uuidv4());
+  }
+
+  removeSessionId(): void {
+    localStorage.removeItem('sess_id');
   }
 
   async register(email: string, password: string) {
@@ -68,7 +76,7 @@ export class AuthService {
     try {
       const user = await signIn({ username: email, password });
       this.isAuthenticated.set(true); // Actualizamos el signal.
-      localStorage.setItem('sess_id', uuidv4());
+      this.setSessionId();
       return user;
     } catch (error) {
       console.error('Error logging in:', error);
@@ -81,7 +89,8 @@ export class AuthService {
     try {
       await signOut();
       this.isAuthenticated.set(false); // Actualizamos el signal.
-      localStorage.removeItem('sess_id');
+      this.removeSessionId();// Eliminamos el sessionId al cerrar sesión.
+      this.router.navigate(['/login']); // Redirigimos al login.
     } catch (error) {
       console.error('Error logging out:', error);
       throw error;
@@ -92,6 +101,10 @@ export class AuthService {
     try {
       const session = await fetchAuthSession();
       const isAuthenticated = session.tokens !== undefined;
+      // Si no hay sessionId, generamos uno nuevo.
+      if (!this.getSessionId()) {
+        this.setSessionId();
+      }
       this.isAuthenticated.set(isAuthenticated); // Actualizamos el signal.
       return isAuthenticated;
     } catch (error) {
@@ -101,20 +114,6 @@ export class AuthService {
     }
   }
 
-  checkAuthenticationd(): Observable<boolean> {
-    return from(
-      (async () => {
-        try {
-          // fetchAuthSession valida la sesión actual y refresca tokens si es necesario.
-          await fetchAuthSession();
-          return true;
-        } catch {
-          // Si fetchAuthSession falla (no hay sesión válida), devuelve false.
-          return false;
-        }
-      })()
-    );
-  }
 
   async getAccessToken(): Promise<string | null> {
     try {

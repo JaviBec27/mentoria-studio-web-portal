@@ -16,4 +16,3 @@ export const routes: Routes = [
   { path: 'counter', component: Counter },
   { path: '**', redirectTo: 'auth' },
 ];
-
