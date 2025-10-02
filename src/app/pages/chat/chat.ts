@@ -1,22 +1,18 @@
 import { Component, signal, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { AppLayout } from '../../shared/components/layout/app-layout/app-layout';
-import { WebSocketService } from '../../shared/services/websocket.service';
+import { AppLayout } from '@SharedLayout/app-layout/app-layout';
+import { WebSocketService } from '@SharedServices/websocket.service';
 import { Subscription } from 'rxjs';
-import { AuthService } from '../../auth/services/auth.services';
+import { AuthService } from '@AuthServices/auth.service';
+import { Message, Interaction, ChatResponseMessage, isChatResponseMessage, isConnectionInfoMessage, FormattedResponse } from './chatmodel';
+import { ConsoleLogService } from '@SharedServices/console-log.service';
 
-interface Message {
-  text: string;
-  type: 'sent' | 'received';
-}
-
-interface ChatResponseMessage {
-  status_response: boolean;
-  response: string | null;
-  error: string | null;
-}
-
+/**
+ * Componente principal para la funcionalidad de chat.
+ * Gestiona la conexión WebSocket, el envío y recepción de mensajes,
+ * y la visualización de la conversación en la interfaz de usuario.
+ */
 @Component({
   selector: 'app-chat',
   imports: [AppLayout, ReactiveFormsModule, CommonModule],
@@ -27,6 +23,7 @@ interface ChatResponseMessage {
 export class Chat implements OnInit, OnDestroy {
   private webSocketService = inject(WebSocketService);
   private authService = inject(AuthService);
+  private logger = inject(ConsoleLogService);
   private messageSubscription!: Subscription;
 
   /** ID de sesión del usuario */
@@ -35,6 +32,9 @@ export class Chat implements OnInit, OnDestroy {
   readonly language: string = 'es';
   /** Ruta del recurso en el backend */
   readonly resourcepath: string = '/chat';
+
+  /** Historial de las últimas 2 interacciones */
+  interactionHistory = signal<Interaction[]>([]);
 
   /** Lista de mensajes en la conversación */
   messages = signal<Message[]>([
@@ -63,14 +63,14 @@ export class Chat implements OnInit, OnDestroy {
         this.webSocketService.connect(token).subscribe();
         this.subscribeToMessages();
       } else {
-        console.error('No se pudo obtener el token de acceso para WebSocket.');
+        this.logger.error('No se pudo obtener el token de acceso para WebSocket.');
         this.messages.update((messages) => [
           ...messages,
           { text: 'Error de autenticación. No se pudo conectar.', type: 'received' },
         ]);
       }
     } catch (error) {
-      console.error('Error al obtener el token de acceso:', error);
+      this.logger.error('Error al obtener el token de acceso:', error);
       this.messages.update((messages) => [
         ...messages,
         { text: 'Error de autenticación. No se pudo conectar.', type: 'received' },
@@ -93,23 +93,37 @@ export class Chat implements OnInit, OnDestroy {
     this.messageSubscription = this.webSocketService.messages$.subscribe({
       next: (message) => {
         const formattedResponse = this.responseFormat(message);
-        if (formattedResponse.status_response && formattedResponse.response) {
-          this.messages.update((messages) => [
-            ...messages,
-            { text: formattedResponse.response as string, type: 'received' },
-          ]);
-        } else {
-          const errorText = formattedResponse.error || 'Respuesta no válida del servidor.';
-          this.messages.update((messages) => [
-            ...messages,
-            { text: errorText, type: 'received' },
-          ]);
-          console.error('Error en la respuesta:', formattedResponse.error);
+
+        // Solo procesa si es una respuesta de chat válida.
+        if (formattedResponse) {
+          if (formattedResponse.status_response && formattedResponse.response) {
+            // 1. Encuentra la última pregunta del usuario ANTES de añadir la nueva respuesta.
+            const lastUserMessage = this.messages().slice().reverse().find(m => m.type === 'sent');
+
+            // 2. Añade el nuevo mensaje del asistente a la lista de mensajes.
+            this.messages.update((messages) => [
+              ...messages,
+              { text: formattedResponse.response as string, type: 'received' },
+            ]);
+
+            // 3. Si se encontró una pregunta de usuario, actualiza el historial de interacciones.
+            if (lastUserMessage) {
+              this.updateInteractionHistory(lastUserMessage.text, formattedResponse.response as string);
+            }
+          } else {
+            const errorText = formattedResponse.error || 'Respuesta no válida del servidor.';
+            this.messages.update((messages) => [
+              ...messages,
+              { text: errorText, type: 'received' },
+            ]);
+            this.logger.error('Error en la respuesta:', formattedResponse.error);
+          }
+          this.isLoading.set(false);
         }
-        this.isLoading.set(false);
+        // Si formattedResponse es null (ej. mensaje de conexión), no hace nada en la UI de chat.
       },
       error: (err) => {
-        console.error('Error en la suscripción de mensajes WebSocket:', err);
+        this.logger.error('Error en la suscripción de mensajes WebSocket:', err);
         this.messages.update((messages) => [
           ...messages,
           { text: 'Error de conexión con el servidor.', type: 'received' },
@@ -137,50 +151,69 @@ export class Chat implements OnInit, OnDestroy {
     // Ajusta este payload al formato exacto que tu backend de WebSocket espera
     const payload = {
       action: 'sendMessage', // O la acción que tu backend espere, ej: 'message'
-      sessionId: this.sessionId,
-      lang: this.language,
-      question: question
-
+      data: {
+        sessionId: this.sessionId,
+        lang: this.language,
+        question: question,
+        history: this.interactionHistory()
+      }
     };
 
     this.webSocketService.sendMessage(payload);
   }
 
   /**
-   * Formatea la respuesta del servicio HTTP.
-   * @param response La respuesta recibida del servicio HTTP.
-   * @returns Un objeto ChatResponseMessage con el estado y la respuesta formateada.
+   * Formatea la respuesta del servicio WebSocket usando type guards.
+   * @param response La respuesta recibida del servicio WebSocket.
+   * @returns Un objeto ChatResponseMessage, o null si el mensaje no es para el chat.
    */
-  responseFormat(response: any): ChatResponseMessage {
-    try {
-      // 1. Intenta convertir el string a un objeto JavaScript/TypeScript.
-      // Asumimos que el mensaje del WebSocket es un string JSON.
-      const parsedJson = response;
+  responseFormat(response: any): FormattedResponse {
+    this.logger.log('Respuesta recibida:', response);
 
-      // 2. Crea el objeto de respuesta exitosa usando los datos del JSON.
-      // Se asume que el JSON tiene la estructura esperada.
-      const chatResponse: ChatResponseMessage = {
-        status_response: parsedJson.status_response,
-        response: this.limpiarRespuesta(parsedJson.response),
-        error: null, // No hay error, así que se establece como nulo.
+    if (isChatResponseMessage(response)) {
+      // Es un mensaje de chat, lo procesamos.
+      return {
+        status_response: response.status_response,
+        response: response.response ? this.limpiarRespuesta(response.response) : null,
+        error: response.error,
       };
-
-      return chatResponse;
-
-    } catch (error) {
-      // 3. Si ocurre un error en el bloque "try" (ej. JSON mal formado),
-      // se ejecuta este bloque.
-      console.error("Error al procesar el JSON:", error);
-
-      // 4. Crea y devuelve un objeto de error estandarizado.
-      const errorResponse: ChatResponseMessage = {
-        status_response: false,
-        response: null,
-        error: "El formato de la respuesta recibida es inválido.",
-      };
-
-      return errorResponse;
     }
+
+    if (isConnectionInfoMessage(response)) {
+      // Es un mensaje informativo de conexión, lo registramos y lo ignoramos para la UI.
+      this.logger.log('Mensaje de conexión recibido:', response.message);
+      return null;
+    }
+
+    // Si no es ninguno de los tipos conocidos, es un formato inesperado.
+    this.logger.error("El formato de la respuesta recibida es inválido:", response);
+    return {
+      status_response: false,
+      response: null,
+      error: "El formato de la respuesta recibida es inválido.",
+    };
+  }
+
+  /**
+   * Actualiza el historial con la última interacción y lo mantiene con un máximo de 2 elementos.
+   * @param userQuestion La pregunta del usuario.
+   * @param assistantResponse La respuesta del asistente.
+   */
+  private updateInteractionHistory(userQuestion: string, assistantResponse: string): void {
+    const newInteraction: Interaction = {
+      user: userQuestion,
+      assistant: assistantResponse,
+    };
+
+    this.interactionHistory.update(currentHistory => {
+      const newHistory = [...currentHistory, newInteraction];
+      // Mantiene solo las últimas 2 interacciones
+      if (newHistory.length > 2) {
+        return newHistory.slice(1);
+      }
+      return newHistory;
+    });
+    this.logger.log('Historial de interacciones actualizado:', this.interactionHistory());
   }
 
   /**

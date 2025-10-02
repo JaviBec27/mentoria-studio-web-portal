@@ -8,13 +8,13 @@ import { Component, signal } from '@angular/core';
 })
 export class Counter {
   count = 0;
-
   counterSignal = signal(0);
 
   increment() {
     this.count++;
     this.counterSignal.update(n => n + 1);
   }
+
 
   decrement() {
     this.count--;

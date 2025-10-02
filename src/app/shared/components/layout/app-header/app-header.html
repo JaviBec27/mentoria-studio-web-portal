@@ -3,3 +3,13 @@
     <img src="images/logo_invert_2.png" alt="MentorIA Studio Logo" class="logo">
   </div>
 </header>
+<p-dialog header="Advertencia de Inactividad" [(visible)]="showWarningDialog" [modal]="true" [style]="{width: '350px'}" [draggable]="false" [resizable]="false" (onHide)="stayActive()">
+    <div class="flex align-items-center justify-content-center">
+        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+        <span>Tu sesión está a punto de expirar. Serás desconectado en <b>{{ countdown }}</b> segundos.</span>
+    </div>
+    <ng-template pTemplate="footer">
+        <p-button (click)="authService.logout()" label="Cerrar Sesión" styleClass="p-button-text"></p-button>
+        <p-button (click)="stayActive()" label="Permanecer Activo" styleClass="p-button-text" [autofocus]="true"></p-button>
+    </ng-template>
+</p-dialog>
